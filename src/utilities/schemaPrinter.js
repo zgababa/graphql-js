@@ -152,7 +152,7 @@ export function printType(type: GraphQLType): string {
   return printInputObject(type);
 }
 
-function printScalar(type: GraphQLScalarType): string {
+function printScalar(type: GraphQLScalarType<*, *>): string {
   return printDescription(type) +
     `scalar ${type.name}`;
 }

@@ -27,7 +27,7 @@ import type { GraphQLSchema } from './schema';
  * These are all of the possible kinds of types.
  */
 export type GraphQLType =
-  GraphQLScalarType |
+  GraphQLScalarType<*, *> |
   GraphQLObjectType |
   GraphQLInterfaceType |
   GraphQLUnionType |
@@ -61,12 +61,12 @@ export function assertType(type: mixed): GraphQLType {
  * These types may be used as input types for arguments and directives.
  */
 export type GraphQLInputType =
-  GraphQLScalarType |
+  GraphQLScalarType<*, *> |
   GraphQLEnumType |
   GraphQLInputObjectType |
   GraphQLList<GraphQLInputType> |
   GraphQLNonNull<
-    GraphQLScalarType |
+    GraphQLScalarType<*, *> |
     GraphQLEnumType |
     GraphQLInputObjectType |
     GraphQLList<GraphQLInputType>
@@ -93,14 +93,14 @@ export function assertInputType(type: ?GraphQLType): GraphQLInputType {
  * These types may be used as output types as the result of fields.
  */
 export type GraphQLOutputType =
-  GraphQLScalarType |
+  GraphQLScalarType<*, *> |
   GraphQLObjectType |
   GraphQLInterfaceType |
   GraphQLUnionType |
   GraphQLEnumType |
   GraphQLList<GraphQLOutputType> |
   GraphQLNonNull<
-    GraphQLScalarType |
+    GraphQLScalarType<*, *> |
     GraphQLObjectType |
     GraphQLInterfaceType |
     GraphQLUnionType |
@@ -131,7 +131,7 @@ export function assertOutputType(type: ?GraphQLType): GraphQLOutputType {
  * These types may describe types which may be leaf values.
  */
 export type GraphQLLeafType =
-  GraphQLScalarType |
+  GraphQLScalarType<*, *> |
   GraphQLEnumType;
 
 export function isLeafType(type: ?GraphQLType): boolean {
@@ -200,7 +200,7 @@ export function assertAbstractType(type: ?GraphQLType): GraphQLAbstractType {
  * These types can all accept null as a value.
  */
 export type GraphQLNullableType =
-  GraphQLScalarType |
+  GraphQLScalarType<*, *> |
   GraphQLObjectType |
   GraphQLInterfaceType |
   GraphQLUnionType |
@@ -218,7 +218,7 @@ export function getNullableType<T: GraphQLType>(
  * These named types do not include modifiers like List or NonNull.
  */
 export type GraphQLNamedType =
-  GraphQLScalarType |
+  GraphQLScalarType<*, *> |
   GraphQLObjectType |
   GraphQLInterfaceType |
   GraphQLUnionType |
@@ -265,13 +265,13 @@ function resolveThunk<T>(thunk: Thunk<T>): T {
  *     });
  *
  */
-export class GraphQLScalarType {
+export class GraphQLScalarType<TInternal, TExternal> {
   name: string;
   description: ?string;
 
-  _scalarConfig: GraphQLScalarTypeConfig<*, *>;
+  _scalarConfig: GraphQLScalarTypeConfig<TInternal, TExternal>;
 
-  constructor(config: GraphQLScalarTypeConfig<*, *>) {
+  constructor(config: GraphQLScalarTypeConfig<TInternal, TExternal>) {
     invariant(config.name, 'Type must be named.');
     assertValidName(config.name);
     this.name = config.name;
@@ -294,19 +294,19 @@ export class GraphQLScalarType {
   }
 
   // Serializes an internal value to include in a response.
-  serialize(value: mixed): mixed {
+  serialize(value: mixed): ?TExternal {
     const serializer = this._scalarConfig.serialize;
     return serializer(value);
   }
 
   // Parses an externally provided value to use as an input.
-  parseValue(value: mixed): mixed {
+  parseValue(value: mixed): ?TInternal {
     const parser = this._scalarConfig.parseValue;
     return parser ? parser(value) : null;
   }
 
   // Parses an externally provided literal value to use as an input.
-  parseLiteral(valueNode: ValueNode): mixed {
+  parseLiteral(valueNode: ValueNode): ?TInternal {
     const parser = this._scalarConfig.parseLiteral;
     return parser ? parser(valueNode) : null;
   }
